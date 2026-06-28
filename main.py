@@ -26,13 +26,12 @@ def run_agent():
 风速：{wind}
 降雨：{rain}
 
-请回答：
+请用中文回答：
 1. 是否适合出门
-2. 是否要带伞
+2. 是否需要带伞
 3. 一句话总结
 """
 
-    # ===== AI 请求 =====
     url = f"https://ark.cn-beijing.volces.com/api/v3/{endpoint}/chat/completions"
 
     response = requests.post(
@@ -50,15 +49,25 @@ def run_agent():
         timeout=20
     )
 
-    print("STATUS:", response.status_code)
-    print("TEXT:", response.text)
+    # ===== 强制兜底：永不崩 =====
+    text = response.text
 
-    # ===== 安全解析 =====
     try:
         data = response.json()
-        advice = data["choices"][0]["message"]["content"]
-    except:
-        advice = "AI返回失败：" + response.text
+
+        # 优先正常结构
+        if isinstance(data, dict):
+            if "choices" in data and data["choices"]:
+                advice = data["choices"][0]["message"]["content"]
+            elif "error" in data:
+                advice = "API错误：" + str(data["error"])
+            else:
+                advice = "未知返回结构：" + str(data)
+        else:
+            advice = str(data)
+
+    except Exception:
+        advice = "AI接口异常，原始返回：" + text
 
     # ===== 发邮件 =====
     msg = MIMEText(advice, "plain", "utf-8")
