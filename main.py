@@ -17,8 +17,7 @@ def run_agent():
 
     data = requests.get(url, params=params).json()
     weather = data["current_weather"]
-
-   rain = data["current"].get("precipitation", 0)
+    rain = data["current"].get("precipitation", 0)
 temp = data["current"]["temperature"]
 wind = data["current"]["wind_speed"]
 
