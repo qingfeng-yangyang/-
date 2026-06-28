@@ -64,3 +64,4 @@ def run_agent():
     print("AGENT RUN SUCCESS")
 
 run_agent()
+print(response.json())
