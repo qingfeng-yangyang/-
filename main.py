@@ -1,104 +1,65 @@
+import os
 import requests
 import smtplib
 from email.mime.text import MIMEText
-import os
 
 def run_agent():
+    # ====== 1. 读取环境变量 ======
+    email = os.environ["EMAIL"]
+    app_password = os.environ["APP_PASSWORD"]
 
-    email = os.environ.get("EMAIL")
-    app_password = os.environ.get("APP_PASSWORD")
-
-    url = "https://api.open-meteo.com/v1/forecast"
-    params = {
-        "latitude": 23.7437,
-        "longitude": 114.7000,
-        "current_weather": True
-    }
-
-    data = requests.get(url, params=params).json()
-    weather = data["current_weather"]
-    temp = data["current"]["temperature"]
-    rain = data["current"].get("precipitation", 0)
-temp = data["current"]["temperature"]
-wind = data["current"]["wind_speed"]
-
-import requests
-
-def run_agent():
-    url = "你的天气API地址"
+    # ====== 2. 天气 API（你如果已经有URL就换这里）======
+    url = "https://api.open-meteo.com/v1/forecast?latitude=23.12&longitude=114.41&current=temperature_2m,wind_speed_10m,precipitation"
 
     response = requests.get(url)
-    data = response.json()   
+    data = response.json()
 
-    temp = data["current"]["temperature"]
-    rain = data["current"].get("precipitation", 0)
-    wind = data["current"]["wind_speed"]
+    # ====== 3. 提取数据 ======
+    temp = data["current"]["temperature_2m"]
+    wind = data["current"]["wind_speed_10m"]
+    rain = data["current"]["precipitation"]
 
+    # ====== 4. 智能建议 ======
     advice = []
 
-    if rain > 50:
-        advice.append("带伞 ☔")
+    if rain > 0.5:
+        advice.append("今天可能下雨，建议带伞 ☔")
 
     if temp > 30:
-        advice.append("防晒 🧴")
+        advice.append("天气较热，注意防晒 🧴")
     elif temp < 15:
-        advice.append("保暖 🧥")
+        advice.append("天气较冷，注意保暖 🧥")
 
     if wind > 8:
-        advice.append("风大 🌬")
+        advice.append("风较大，注意安全 🌬")
 
     if not advice:
-        advice.append("天气很好 👍")
+        advice.append("天气不错，正常出行 👍")
 
-    print("AGENT RUN SUCCESS")
-
-run_agent()
-    tips = []
-
-    if temperature >= 30:
-        tips.append("🔥 天气较热，注意防晒")
-    elif temperature <= 15:
-        tips.append("🧥 天气较冷，注意保暖")
-    else:
-        tips.append("🙂 温度适中")
-
-    if windspeed >= 20:
-        tips.append("💨 风较大，注意安全")
-
-    content = f"""📍河源今日天气
-
-🌡 温度：{temperature}°C
-💨 风速：{windspeed} km/h
-
-🧠 建议：
-""" + "\n".join(tips)
-
-    msg = MIMEText(content)
+    # ====== 5. 邮件内容 ======
     message = f"""
 📍 今日天气
 
 🌡 温度：{temp}°C
 💨 风速：{wind} m/s
-🌧 降雨概率：{rain}%
+🌧 降雨：{rain}
 
 🧠 建议：
 {chr(10).join(advice)}
 """
+
+    # ====== 6. 发邮件 ======
+    msg = MIMEText(message, "plain", "utf-8")
+    msg["Subject"] = "今日天气提醒"
     msg["From"] = email
     msg["To"] = email
 
-    server = smtplib.SMTP_SSL("smtp.gmail.com", 465)
+    server = smtplib.SMTP("smtp.gmail.com", 587)
+    server.starttls()
     server.login(email, app_password)
     server.send_message(msg)
     server.quit()
 
-    print("OK")
+    print("AGENT RUN SUCCESS")
 
-if __name__ == "__main__":
-    run_agent()
-print("AGENT RUN SUCCESS")
-import os
-
-email = os.environ["EMAIL"]
-app_password = os.environ["APP_PASSWORD"]
-#GitHub Actions 自动跑
+run_agent()
