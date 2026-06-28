@@ -56,3 +56,7 @@ def run_agent():
 if __name__ == "__main__":
     run_agent()
 print("AGENT RUN SUCCESS")
+import os
+
+email = os.environ["EMAIL"]
+app_password = os.environ["APP_PASSWORD"]
