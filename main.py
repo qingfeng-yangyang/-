@@ -5,8 +5,8 @@ import os
 
 def run_agent():
 
-    email = os.environ["EMAIL"]
-    app_password = os.environ["APP_PASSWORD"]
+    email = os.environ.get("EMAIL")
+    app_password = os.environ.get("APP_PASSWORD")
 
     url = "https://api.open-meteo.com/v1/forecast"
     params = {
@@ -51,7 +51,7 @@ def run_agent():
     server.send_message(msg)
     server.quit()
 
-    print("完成")
+    print("OK")
 
 if __name__ == "__main__":
     run_agent()
