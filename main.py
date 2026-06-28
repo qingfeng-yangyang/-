@@ -75,3 +75,6 @@ def run_agent():
 
 if __name__ == "__main__":
     run_agent()
+print("KEY:", bool(ark_key))
+print("EP:", endpoint)
+print("URL:", f"https://ark.cn-beijing.volces.com/api/v3/{endpoint}/chat/completions")
