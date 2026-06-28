@@ -22,24 +22,37 @@ def run_agent():
 temp = data["current"]["temperature"]
 wind = data["current"]["wind_speed"]
 
-# 智能建议
-advice = []
+import requests
 
-if rain > 50:
-    advice.append("今天降雨概率较高，建议带伞 ☔")
+def run_agent():
+    url = "你的天气API地址"
 
-if temp > 30:
-    advice.append("天气较热，注意防晒 🧴")
-elif temp < 15:
-    advice.append("天气较冷，注意保暖 🧥")
+    response = requests.get(url)
+    data = response.json()   
 
-if wind > 8:
-    advice.append("风较大，注意出行安全 🌬")
+    temp = data["current"]["temperature"]
+    rain = data["current"].get("precipitation", 0)
+    wind = data["current"]["wind_speed"]
 
-if not advice:
-    advice.append("天气良好，正常出行即可 👍")
-    windspeed = weather["windspeed"]
+    advice = []
 
+    if rain > 50:
+        advice.append("带伞 ☔")
+
+    if temp > 30:
+        advice.append("防晒 🧴")
+    elif temp < 15:
+        advice.append("保暖 🧥")
+
+    if wind > 8:
+        advice.append("风大 🌬")
+
+    if not advice:
+        advice.append("天气很好 👍")
+
+    print("AGENT RUN SUCCESS")
+
+run_agent()
     tips = []
 
     if temperature >= 30:
