@@ -60,8 +60,11 @@ def run_agent():
     server.login(email, app_password)
     server.send_message(msg)
     server.quit()
+    
 
     print("AGENT RUN SUCCESS")
 
 run_agent()
+print(response.json())
+print(response.status_code)
 print(response.json())
