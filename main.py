@@ -21,16 +21,15 @@ def run_agent():
 
     # ===== Prompt =====
     prompt = f"""
-你是一个生活助手，请根据天气给出出行建议（简洁中文）：
+你是一个生活助手，请根据天气给出出行建议：
 
-天气数据：
 温度：{temp}
 风速：{wind}
 降雨：{rain}
 
 要求：
 - 是否适合出门
-- 是否带伞
+- 是否需要带伞
 - 一句总结
 """
 
@@ -50,21 +49,16 @@ def run_agent():
         }
     )
 
-    res = response.json()
+    # ===== 调试信息（很重要）=====
+    print("STATUS:", response.status_code)
+    print("TEXT:", response.text)
 
-    # ===== 调试输出（GitHub Actions里看）=====
-    print("DEBUG STATUS:", response.status_code)
-    print("DEBUG RESPONSE:", res)
-
-    # ===== 安全解析 =====
-    advice = (
-        res.get("choices", [{}])[0]
-        .get("message", {})
-        .get("content")
-    )
-
-    if not advice:
-        advice = str(res)
+    # ===== 防止崩溃 =====
+    try:
+        res = response.json()
+        advice = res.get("choices", [{}])[0].get("message", {}).get("content")
+    except:
+        advice = response.text
 
     # ===== 邮件 =====
     msg = MIMEText(advice, "plain", "utf-8")
