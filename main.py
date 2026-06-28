@@ -18,7 +18,26 @@ def run_agent():
     data = requests.get(url, params=params).json()
     weather = data["current_weather"]
 
-    temperature = weather["temperature"]
+   rain = data["current"].get("precipitation", 0)
+temp = data["current"]["temperature"]
+wind = data["current"]["wind_speed"]
+
+# 智能建议
+advice = []
+
+if rain > 50:
+    advice.append("今天降雨概率较高，建议带伞 ☔")
+
+if temp > 30:
+    advice.append("天气较热，注意防晒 🧴")
+elif temp < 15:
+    advice.append("天气较冷，注意保暖 🧥")
+
+if wind > 8:
+    advice.append("风较大，注意出行安全 🌬")
+
+if not advice:
+    advice.append("天气良好，正常出行即可 👍")
     windspeed = weather["windspeed"]
 
     tips = []
@@ -42,7 +61,16 @@ def run_agent():
 """ + "\n".join(tips)
 
     msg = MIMEText(content)
-    msg["Subject"] = "河源天气 Agent"
+    message = f"""
+📍 今日天气
+
+🌡 温度：{temp}°C
+💨 风速：{wind} m/s
+🌧 降雨概率：{rain}%
+
+🧠 建议：
+{chr(10).join(advice)}
+"""
     msg["From"] = email
     msg["To"] = email
 
@@ -60,3 +88,4 @@ import os
 
 email = os.environ["EMAIL"]
 app_password = os.environ["APP_PASSWORD"]
+GitHub Actions 自动跑
