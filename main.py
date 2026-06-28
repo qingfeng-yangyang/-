@@ -24,9 +24,8 @@ def run_agent():
 天气数据：
 温度：{temp}
 风速：{wind}
-降雨：{rain
+降雨：{rain}
 
-    
 要求：
 - 是否适合出门
 - 是否带伞
