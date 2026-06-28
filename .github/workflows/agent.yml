@@ -20,3 +20,6 @@ jobs:
 
       - name: run
         run: python main.py
+env:
+  EMAIL: ${{ secrets.EMAIL }}
+  APP_PASSWORD: ${{ secrets.APP_PASSWORD }}
