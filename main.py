@@ -4,53 +4,54 @@ import smtplib
 from email.mime.text import MIMEText
 
 def run_agent():
-    # ====== 1. 读取环境变量 ======
+
     email = os.environ["EMAIL"]
     app_password = os.environ["APP_PASSWORD"]
+    deepseek_key = os.environ["DEEPSEEK_API_KEY"]
 
-    # ====== 2. 天气 API（你如果已经有URL就换这里）======
+    # ===== 天气 =====
     url = "https://api.open-meteo.com/v1/forecast?latitude=23.12&longitude=114.41&current=temperature_2m,wind_speed_10m,precipitation"
+    data = requests.get(url).json()
 
-    response = requests.get(url)
-    data = response.json()
-
-    # ====== 3. 提取数据 ======
     temp = data["current"]["temperature_2m"]
     wind = data["current"]["wind_speed_10m"]
     rain = data["current"]["precipitation"]
 
-    # ====== 4. 智能建议 ======
-    advice = []
+    # ===== AI（DeepSeek）=====
+    prompt = f"""
+你是一个生活助手，请根据天气给出出行建议（简洁中文）：
 
-    if rain > 0.5:
-        advice.append("今天可能下雨，建议带伞 ☔")
+天气数据：
+温度：{temp}
+风速：{wind}
+降雨：{rain}
 
-    if temp > 30:
-        advice.append("天气较热，注意防晒 🧴")
-    elif temp < 15:
-        advice.append("天气较冷，注意保暖 🧥")
-
-    if wind > 8:
-        advice.append("风较大，注意安全 🌬")
-
-    if not advice:
-        advice.append("天气不错，正常出行 👍")
-
-    # ====== 5. 邮件内容 ======
-    message = f"""
-📍 今日天气
-
-🌡 温度：{temp}°C
-💨 风速：{wind} m/s
-🌧 降雨：{rain}
-
-🧠 建议：
-{chr(10).join(advice)}
+要求：
+- 是否适合出门
+- 是否带伞
+- 一句总结
 """
 
-    # ====== 6. 发邮件 ======
-    msg = MIMEText(message, "plain", "utf-8")
-    msg["Subject"] = "今日天气提醒"
+    response = requests.post(
+        "https://api.deepseek.com/v1/chat/completions",
+        headers={
+            "Authorization": f"Bearer {deepseek_key}",
+            "Content-Type": "application/json"
+        },
+        json={
+            "model": "deepseek-chat",
+            "messages": [
+                {"role": "user", "content": prompt}
+            ],
+            "temperature": 0.7
+        }
+    )
+
+    advice = response.json()["choices"][0]["message"]["content"]
+
+    # ===== 邮件 =====
+    msg = MIMEText(advice, "plain", "utf-8")
+    msg["Subject"] = "今日AI天气建议"
     msg["From"] = email
     msg["To"] = email
 
