@@ -17,11 +17,10 @@ def run_agent():
     wind = data["current"]["wind_speed_10m"]
     rain = data["current"]["precipitation"]
 
-    # ===== AI（DeepSeek）=====
+    # ===== AI =====
     prompt = f"""
-你是一个生活助手，请根据天气给出出行建议（简洁中文）：
+你是一个生活助手，请根据天气给出出行建议：
 
-天气数据：
 温度：{temp}
 风速：{wind}
 降雨：{rain}
@@ -47,7 +46,21 @@ def run_agent():
         }
     )
 
-    advice = response.json()["choices"][0]["message"]["content"]
+    res = response.json()
+
+    # 🔥 打印真实返回（GitHub Actions里会显示）
+    print("DEBUG STATUS:", response.status_code)
+    print("DEBUG RESPONSE:", res)
+
+    # ===== 安全解析 =====
+    advice = (
+        res.get("choices", [{}])[0]
+        .get("message", {})
+        .get("content")
+    )
+
+    if not advice:
+        advice = str(res)
 
     # ===== 邮件 =====
     msg = MIMEText(advice, "plain", "utf-8")
@@ -60,11 +73,7 @@ def run_agent():
     server.login(email, app_password)
     server.send_message(msg)
     server.quit()
-    
 
     print("AGENT RUN SUCCESS")
 
 run_agent()
-print(response.json())
-print(response.status_code)
-print(response.json())
