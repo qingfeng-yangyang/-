@@ -20,7 +20,8 @@ jobs:
 
       - name: run agent
         env:
-          EMAIL: ${{ secrets.EMAIL }}
-          APP_PASSWORD: ${{ secrets.APP_PASSWORD }}
-          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+  EMAIL: ${{ secrets.EMAIL }}
+  APP_PASSWORD: ${{ secrets.APP_PASSWORD }}
+  ARK_API_KEY: ${{ secrets.ARK_API_KEY }}
+  ARK_ENDPOINT: ${{ secrets.ARK_ENDPOINT }}
         run: python main.py
