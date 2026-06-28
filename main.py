@@ -11,7 +11,7 @@ def run_agent():
     ark_key = os.environ["ARK_API_KEY"]
     endpoint = os.environ["ARK_ENDPOINT"]
 
-    # ===== 天气 =====
+    # ===== 天气 API =====
     url = "https://api.open-meteo.com/v1/forecast?latitude=23.12&longitude=114.41&current=temperature_2m,wind_speed_10m,precipitation"
     data = requests.get(url).json()
 
@@ -21,7 +21,7 @@ def run_agent():
 
     # ===== Prompt =====
     prompt = f"""
-你是一个生活助手，请根据天气给出出行建议：
+你是一个生活助手，请根据天气给出出行建议（中文简洁）：
 
 温度：{temp}
 风速：{wind}
@@ -33,32 +33,37 @@ def run_agent():
 - 一句总结
 """
 
-    # ===== 豆包 EP API =====
-    response = requests.post(
-        f"https://ark.cn-beijing.volces.com/api/v3/{endpoint}/chat/completions",
-        headers={
-            "Authorization": f"Bearer {ark_key}",
-            "Content-Type": "application/json"
-        },
-        json={
-            "model": "doubao-lite-4k",
-            "messages": [
-                {"role": "user", "content": prompt}
-            ],
-            "temperature": 0.7
-        }
-    )
-
-    # ===== 调试信息（很重要）=====
-    print("STATUS:", response.status_code)
-    print("TEXT:", response.text)
-
-    # ===== 防止崩溃 =====
+    # ===== 豆包 EP 请求 =====
     try:
+        response = requests.post(
+            f"https://ark.cn-beijing.volces.com/api/v3/{endpoint}/chat/completions",
+            headers={
+                "Authorization": f"Bearer {ark_key}",
+                "Content-Type": "application/json"
+            },
+            json={
+                "model": "doubao-lite-4k",
+                "messages": [
+                    {"role": "user", "content": prompt}
+                ],
+                "temperature": 0.7
+            },
+            timeout=20
+        )
+
+        print("STATUS:", response.status_code)
+        print("TEXT:", response.text)
+
         res = response.json()
-        advice = res.get("choices", [{}])[0].get("message", {}).get("content")
-    except:
-        advice = response.text
+
+        # ===== 安全解析 =====
+        if "choices" in res and len(res["choices"]) > 0:
+            advice = res["choices"][0]["message"]["content"]
+        else:
+            advice = "AI返回异常：" + str(res)
+
+    except Exception as e:
+        advice = f"请求失败：{str(e)}"
 
     # ===== 邮件 =====
     msg = MIMEText(advice, "plain", "utf-8")
@@ -66,11 +71,14 @@ def run_agent():
     msg["From"] = email
     msg["To"] = email
 
-    server = smtplib.SMTP("smtp.gmail.com", 587)
-    server.starttls()
-    server.login(email, app_password)
-    server.send_message(msg)
-    server.quit()
+    try:
+        server = smtplib.SMTP("smtp.gmail.com", 587)
+        server.starttls()
+        server.login(email, app_password)
+        server.send_message(msg)
+        server.quit()
+    except Exception as e:
+        print("EMAIL ERROR:", str(e))
 
     print("AGENT RUN SUCCESS")
 
