@@ -5,7 +5,6 @@ from email.mime.text import MIMEText
 
 def run_agent():
 
-    # ===== Secrets =====
     email = os.environ["EMAIL"]
     app_password = os.environ["APP_PASSWORD"]
     ark_key = os.environ["ARK_API_KEY"]
@@ -21,19 +20,19 @@ def run_agent():
     rain = weather["current"]["precipitation"]
 
     prompt = f"""
-你是一个生活助手，请根据天气给出出行建议：
+你是生活助手，根据天气给出建议：
 
 温度：{temp}
 风速：{wind}
 降雨：{rain}
 
-请用中文回答：
+请回答：
 1. 是否适合出门
-2. 是否需要带伞
+2. 是否要带伞
 3. 一句话总结
 """
 
-    # ===== AI 请求（最稳定版）=====
+    # ===== AI 请求 =====
     url = f"https://ark.cn-beijing.volces.com/api/v3/{endpoint}/chat/completions"
 
     response = requests.post(
@@ -43,8 +42,10 @@ def run_agent():
             "Content-Type": "application/json"
         },
         json={
-            "model": "doubao-seed-2.0-lite",
-            "messages": [{"role": "user", "content": prompt}]
+            "model": "Doubao-Seed-2.0-lite",
+            "messages": [
+                {"role": "user", "content": prompt}
+            ]
         },
         timeout=20
     )
@@ -52,12 +53,12 @@ def run_agent():
     print("STATUS:", response.status_code)
     print("TEXT:", response.text)
 
-    # ===== 强制兜底（防空邮件）=====
+    # ===== 安全解析 =====
     try:
         data = response.json()
         advice = data["choices"][0]["message"]["content"]
     except:
-        advice = "AI返回失败，请检查EP/模型/Key：" + response.text
+        advice = "AI返回失败：" + response.text
 
     # ===== 发邮件 =====
     msg = MIMEText(advice, "plain", "utf-8")
@@ -75,6 +76,3 @@ def run_agent():
 
 if __name__ == "__main__":
     run_agent()
-print("KEY:", bool(ark_key))
-print("EP:", endpoint)
-print("URL:", f"https://ark.cn-beijing.volces.com/api/v3/{endpoint}/chat/completions")
