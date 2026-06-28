@@ -42,7 +42,7 @@ def run_agent():
                 "Content-Type": "application/json"
             },
             json={
-                "model": Doubao-Seed-2.0-lite",
+                "model": "Doubao-Seed-2.0-lite",
                 "messages": [
                     {"role": "user", "content": prompt}
                 ],
