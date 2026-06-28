@@ -5,9 +5,11 @@ from email.mime.text import MIMEText
 
 def run_agent():
 
+    # ===== 环境变量 =====
     email = os.environ["EMAIL"]
     app_password = os.environ["APP_PASSWORD"]
-    deepseek_key = os.environ["DEEPSEEK_API_KEY"]
+    ark_key = os.environ["ARK_API_KEY"]
+    endpoint = os.environ["ARK_ENDPOINT"]
 
     # ===== 天气 =====
     url = "https://api.open-meteo.com/v1/forecast?latitude=23.12&longitude=114.41&current=temperature_2m,wind_speed_10m,precipitation"
@@ -17,10 +19,11 @@ def run_agent():
     wind = data["current"]["wind_speed_10m"]
     rain = data["current"]["precipitation"]
 
-    # ===== AI =====
+    # ===== Prompt =====
     prompt = f"""
-你是一个生活助手，请根据天气给出出行建议：
+你是一个生活助手，请根据天气给出出行建议（简洁中文）：
 
+天气数据：
 温度：{temp}
 风速：{wind}
 降雨：{rain}
@@ -31,14 +34,15 @@ def run_agent():
 - 一句总结
 """
 
+    # ===== 豆包 EP API =====
     response = requests.post(
-        "https://api.deepseek.com/v1/chat/completions",
+        f"https://ark.cn-beijing.volces.com/api/v3/{endpoint}/chat/completions",
         headers={
-            "Authorization": f"Bearer {deepseek_key}",
+            "Authorization": f"Bearer {ark_key}",
             "Content-Type": "application/json"
         },
         json={
-            "model": "deepseek-chat",
+            "model": "doubao-lite-4k",
             "messages": [
                 {"role": "user", "content": prompt}
             ],
@@ -48,7 +52,7 @@ def run_agent():
 
     res = response.json()
 
-    # 🔥 打印真实返回（GitHub Actions里会显示）
+    # ===== 调试输出（GitHub Actions里看）=====
     print("DEBUG STATUS:", response.status_code)
     print("DEBUG RESPONSE:", res)
 
@@ -76,4 +80,5 @@ def run_agent():
 
     print("AGENT RUN SUCCESS")
 
-run_agent()
+if __name__ == "__main__":
+    run_agent()
