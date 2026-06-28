@@ -1,17 +1,14 @@
 name: Weather Agent
 
 on:
-  schedule:
-    - cron: "0 23 * * *"  # 北京时间早上7点
   workflow_dispatch:
 
 jobs:
-  run-agent:
+  run:
     runs-on: ubuntu-latest
 
     steps:
-      - name: checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: setup python
         uses: actions/setup-python@v5
