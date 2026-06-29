@@ -1,87 +1,22 @@
 import os
-import requests
-import smtplib
-from email.mime.text import MIMEText
+from openai import OpenAI
 
-def run_agent():
+# 读取 GitHub Secrets
+api_key = os.environ["ARK_API_KEY"]
 
-    email = os.environ["EMAIL"]
-    app_password = os.environ["APP_PASSWORD"]
-    ark_key = os.environ["ARK_API_KEY"]
-    endpoint = os.environ["ARK_ENDPOINT"]
+# 创建客户端
+client = OpenAI(
+    base_url="https://ark.cn-beijing.volces.com/api/v3",
+    api_key=api_key,
+)
 
-    # ===== 天气 =====
-    weather = requests.get(
-        "https://api.open-meteo.com/v1/forecast?latitude=23.12&longitude=114.41&current=temperature_2m,wind_speed_10m,precipitation"
-    ).json()
+# 调用 AI
+response = client.responses.create(
+    model="ep-20260628222322-mstpq",
+    input="你好，请介绍一下你自己。"
+)
 
-    temp = weather["current"]["temperature_2m"]
-    wind = weather["current"]["wind_speed_10m"]
-    rain = weather["current"]["precipitation"]
-
-    prompt = f"""
-你是生活助手，根据天气给出建议：
-
-温度：{temp}
-风速：{wind}
-降雨：{rain}
-
-请用中文回答：
-1. 是否适合出门
-2. 是否需要带伞
-3. 一句话总结
-"""
-
-    url = f"https://ark.cn-beijing.volces.com/api/v3/{endpoint}/chat/completions"
-
-    response = requests.post(
-        url,
-        headers={
-            "Authorization": f"Bearer {ark_key}",
-            "Content-Type": "application/json"
-        },
-        json={
-            "model": "Doubao-Seed-2.0-lite",
-            "messages": [
-                {"role": "user", "content": prompt}
-            ]
-        },
-        timeout=20
-    )
-
-    # ===== 强制兜底：永不崩 =====
-    text = response.text
-
-    try:
-        data = response.json()
-
-        # 优先正常结构
-        if isinstance(data, dict):
-            if "choices" in data and data["choices"]:
-                advice = data["choices"][0]["message"]["content"]
-            elif "error" in data:
-                advice = "API错误：" + str(data["error"])
-            else:
-                advice = "未知返回结构：" + str(data)
-        else:
-            advice = str(data)
-
-    except Exception:
-        advice = "AI接口异常，原始返回：" + text
-
-    # ===== 发邮件 =====
-    msg = MIMEText(advice, "plain", "utf-8")
-    msg["Subject"] = "今日AI天气建议"
-    msg["From"] = email
-    msg["To"] = email
-
-    server = smtplib.SMTP("smtp.gmail.com", 587)
-    server.starttls()
-    server.login(email, app_password)
-    server.send_message(msg)
-    server.quit()
-
-    print("AGENT RUN SUCCESS")
-
-if __name__ == "__main__":
-    run_agent()
+# 打印完整返回
+print("===== AI RESPONSE =====")
+print(response)
+print("=======================")
